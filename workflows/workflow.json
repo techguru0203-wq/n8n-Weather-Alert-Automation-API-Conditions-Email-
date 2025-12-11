@@ -1,0 +1,124 @@
+{
+  "name": "Weather Alert Notifications",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openweathermap.org/data/2.5/weather?q=London&appid=YOUR_API_KEY&units=metric",
+        "options": {}
+      },
+      "name": "HTTP Request (Weather)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        400,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const temp = items[0].json.main && items[0].json.main.temp ? items[0].json.main.temp : null;\nreturn [{json: {temperature: temp}}];"
+      },
+      "name": "Extract Temp",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        600,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json[\"temperature\"]}}",
+              "operation": "greater",
+              "value2": 30
+            }
+          ]
+        }
+      },
+      "name": "If Temp > 30\u00b0C?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        800,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "alerts@example.com",
+        "toEmail": "you@example.com",
+        "subject": "Weather Alert: High Temperature",
+        "text": "Temperature exceeded threshold: {{$json[\"temperature\"]}} \u00b0C"
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request (Weather)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request (Weather)": {
+      "main": [
+        [
+          {
+            "node": "Extract Temp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Temp": {
+      "main": [
+        [
+          {
+            "node": "If Temp > 30\u00b0C?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Temp > 30\u00b0C?": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "main2": []
+    }
+  },
+  "active": false,
+  "settings": {}
+}
